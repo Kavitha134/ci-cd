@@ -1,62 +1,28 @@
-pipeline {
+pipeline{
+    agent any
     
-    agent any 
-    
-    environment {
-        IMAGE_TAG = "${BUILD_NUMBER}"
-    }
-    
-    stages {
+    stages{
         
-        stage('Checkout'){
-           steps {
-                url: 'https://github.com/Kavitha134/ci-cd',
-                branch: 'main'
-           }
+        stage('checkout'){
+            steps{
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Kavitha134/ci-cd']])
+                echo 'checkout completed'
+            }
         }
-
-        stage('Build Docker'){
+        
+        stage('build docker'){
             steps{
                 script{
-                    sh '''
-                    echo 'Buid Docker Image'
-                    docker build -t ankavitha/cicd-e2e:${BUILD_NUMBER} .
-                    '''
+                    sh 'docker build -t ankavitha/todoapp1 .'
                 }
+                
             }
         }
-
-        stage('Push the artifacts'){
-           steps{
+        stage('push the docker'){
+            steps{
                 script{
-                    sh '''
-                    echo 'Push to Repo'
-                    docker push ankavitha/cicd-e2e:${BUILD_NUMBER}
-                    '''
-                }
-            }
-        }
-        
-        stage('Checkout K8S manifest SCM'){
-            steps {
-                url: 'https://github.com/Kavitha134/jenkins1',
-                branch: 'main'
-            }
-        }
-        
-        stage('Update K8S manifest & push to Repo'){
-            steps {
-                script{
-                        sh '''
-                        cat deploy.yaml
-                        sed -i '' "s/32/${BUILD_NUMBER}/g" deploy.yaml
-                        cat deploy.yaml
-                        git add deploy.yaml
-                        git commit -m 'Updated the deploy yaml | Jenkins Pipeline'
-                        git remote -v
-                        git push https://github.com/Kavitha134/jenkins1 HEAD:main
-                        '''                        
-                    }
+                    sh '''docker login -u ankavitha -p Kavitha100%
+                    docker push ankavitha/todoapp1:latest'''
                 }
             }
         }
