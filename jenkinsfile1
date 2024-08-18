@@ -1,0 +1,29 @@
+stages{
+        stage('checkout the git repo'){
+            steps{
+                git credentialsId: 'bd50d1cb-b171-4192-a290-05b121bbe69a', 
+                url: 'https://github.com/Kavitha134/jenkins1',
+                branch: 'main'
+            }
+        }
+        stage('Update K8S manifest & push to Repo'){
+            steps {
+                script{
+                    withCredentials([usernamePassword(credentialsId: 'bd50d1cb-b171-4192-a290-05b121bbe69a', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                        sh '''
+                        cd argocd1
+                        cat deploy.yaml
+                        sed -i "s/10/11/g" deploy.yaml
+                        cat deploy.yaml
+                    
+                        git remote set-url origin https://github.com/Kavitha134/jenkins1.git
+                        git add deploy.yaml
+                        git commit -m 'Updated the deploy yaml | Jenkins Pipeline'
+                        git remote -v
+                        git config --global user.name "${GIT_USERNAME}"
+                        git config --global user.password "${GIT_PASSWORD}"
+                        git push -u origin main
+                        '''                        
+                    }
+                }
+            }
